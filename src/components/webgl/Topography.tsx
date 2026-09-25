@@ -329,10 +329,10 @@ const Topography: React.FC<TopographyProps> = ({
       const sp = u['uSpeed'].value as number;
       const msp = u['uMorphSpeed'].value as number;
       for (let g = 0; g < 4; g++) {
-        const arr = ctrlArrays[g];
-        const idx = CTRL_INDICES[g];
+        const arr = ctrlArrays[g]!;
+        const idx = CTRL_INDICES[g]!;
         for (let j = 0; j < 4; j++) {
-          const i = idx[j];
+          const i = idx[j]!;
           arr[j] = ma * Math.sin(time * sp * Math.sin(i * msp) + i);
         }
       }
@@ -362,7 +362,7 @@ const Topography: React.FC<TopographyProps> = ({
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        isVisible = entry.isIntersecting;
+        isVisible = entry?.isIntersecting ?? false;
         isVisible ? tryStart() : tryStop();
       },
       { threshold: 0 }
