@@ -33,7 +33,7 @@ export interface TopographyProps {
 const hexToRgb = (hex: string): [number, number, number] => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return [1, 1, 1];
-  return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+  return [parseInt(result[1]!, 16) / 255, parseInt(result[2]!, 16) / 255, parseInt(result[3]!, 16) / 255];
 };
 
 const colorModeToFloat = (mode: ColorMode): number => {
@@ -323,7 +323,7 @@ const Topography: React.FC<TopographyProps> = ({
     const loop = (t: number) => {
       const time = (t - t0) * 0.001;
       const u = program.uniforms;
-      u.iTime.value = time;
+      u['iTime'].value = time;
 
       const ma = u['uMorphAmount'].value as number;
       const sp = u['uSpeed'].value as number;
