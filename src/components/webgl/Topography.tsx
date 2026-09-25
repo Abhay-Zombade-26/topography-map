@@ -281,7 +281,7 @@ const Topography: React.FC<TopographyProps> = ({
       const w = Math.max(1, Math.floor(rect.width));
       const h = Math.max(1, Math.floor(rect.height));
       renderer.setSize(w, h);
-      const res = program.uniforms.iResolution.value as Float32Array;
+      const res = program.uniforms['iResolution'].value as Float32Array;
       res[0] = gl.drawingBufferWidth;
       res[1] = gl.drawingBufferHeight;
       renderer.render({ scene: mesh });
@@ -309,10 +309,10 @@ const Topography: React.FC<TopographyProps> = ({
     canvas.addEventListener('mouseleave', onMouseLeave);
 
     const ctrlArrays = [
-      program.uniforms.uCtrlA.value as Float32Array,
-      program.uniforms.uCtrlB.value as Float32Array,
-      program.uniforms.uCtrlC.value as Float32Array,
-      program.uniforms.uCtrlD.value as Float32Array
+      program.uniforms['uCtrlA'].value as Float32Array,
+      program.uniforms['uCtrlB'].value as Float32Array,
+      program.uniforms['uCtrlC'].value as Float32Array,
+      program.uniforms['uCtrlD'].value as Float32Array
     ];
 
     let raf = 0;
@@ -325,9 +325,9 @@ const Topography: React.FC<TopographyProps> = ({
       const u = program.uniforms;
       u.iTime.value = time;
 
-      const ma = u.uMorphAmount.value as number;
-      const sp = u.uSpeed.value as number;
-      const msp = u.uMorphSpeed.value as number;
+      const ma = u['uMorphAmount'].value as number;
+      const sp = u['uSpeed'].value as number;
+      const msp = u['uMorphSpeed'].value as number;
       for (let g = 0; g < 4; g++) {
         const arr = ctrlArrays[g];
         const idx = CTRL_INDICES[g];
@@ -339,12 +339,12 @@ const Topography: React.FC<TopographyProps> = ({
 
       currentMouse[0] += 0.05 * (targetMouse[0] - currentMouse[0]);
       currentMouse[1] += 0.05 * (targetMouse[1] - currentMouse[1]);
-      const m = program.uniforms.uMouse.value as Float32Array;
+      const m = program.uniforms['uMouse'].value as Float32Array;
       m[0] = currentMouse[0];
       m[1] = currentMouse[1];
 
       mouseActive += 0.05 * (mouseActiveTarget - mouseActive);
-      u.uMouseActive.value = mouseActive;
+      u['uMouseActive'].value = mouseActive;
 
       renderer.render({ scene: mesh });
       raf = requestAnimationFrame(loop);
@@ -400,28 +400,28 @@ const Topography: React.FC<TopographyProps> = ({
     const { program } = ctx;
     const u = program.uniforms;
 
-    u.uSpeed.value = speed;
-    u.uMorphAmount.value = morphAmount;
-    u.uMorphSpeed.value = morphSpeed;
-    u.uBands.value = bands;
-    u.uThickness.value = thickness;
-    u.uScale.value = scale;
-    u.uPixelSize.value = pixelSize;
-    u.uGlow.value = glow;
-    u.uColorMode.value = colorModeToFloat(colorMode);
-    u.uContrast.value = contrast;
-    u.uBrightness.value = brightness;
-    u.uFillBands.value = fillBands ? 1.0 : 0.0;
-    u.uOpacity.value = opacity;
-    u.uLightMode.value = lightMode ? 1.0 : 0.0;
-    u.uGrain.value = grain ? 1.0 : 0.0;
-    u.uGrainIntensity.value = grainIntensity;
-    u.uLow.value = new Float32Array(hexToRgb(lowColor));
-    u.uMid.value = new Float32Array(hexToRgb(midColor));
-    u.uHigh.value = new Float32Array(hexToRgb(highColor));
-    u.uMouseEnabled.value = mouseInteraction ? 1.0 : 0.0;
-    u.uMouseRadius.value = mouseRadius;
-    u.uMouseStrength.value = mouseStrength;
+    u['uSpeed'].value = speed;
+    u['uMorphAmount'].value = morphAmount;
+    u['uMorphSpeed'].value = morphSpeed;
+    u['uBands'].value = bands;
+    u['uThickness'].value = thickness;
+    u['uScale'].value = scale;
+    u['uPixelSize'].value = pixelSize;
+    u['uGlow'].value = glow;
+    u['uColorMode'].value = colorModeToFloat(colorMode);
+    u['uContrast'].value = contrast;
+    u['uBrightness'].value = brightness;
+    u['uFillBands'].value = fillBands ? 1.0 : 0.0;
+    u['uOpacity'].value = opacity;
+    u['uLightMode'].value = lightMode ? 1.0 : 0.0;
+    u['uGrain'].value = grain ? 1.0 : 0.0;
+    u['uGrainIntensity'].value = grainIntensity;
+    u['uLow'].value = new Float32Array(hexToRgb(lowColor));
+    u['uMid'].value = new Float32Array(hexToRgb(midColor));
+    u['uHigh'].value = new Float32Array(hexToRgb(highColor));
+    u['uMouseEnabled'].value = mouseInteraction ? 1.0 : 0.0;
+    u['uMouseRadius'].value = mouseRadius;
+    u['uMouseStrength'].value = mouseStrength;
   }, [
     lowColor,
     midColor,
