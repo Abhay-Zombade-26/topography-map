@@ -277,9 +277,10 @@ const Topography: React.FC<TopographyProps> = ({
     ctxMap.set(container, { renderer, program, mesh });
 
     const setSize = () => {
-      const rect = container.getBoundingClientRect();
-      const w = Math.max(1, Math.floor(rect.width));
-      const h = Math.max(1, Math.floor(rect.height));
+      // clientWidth/clientHeight ignore ancestor CSS transforms (the hero
+      // zooms this container), so the drawing buffer stays within GPU limits.
+      const w = Math.max(1, Math.floor(container.clientWidth || container.getBoundingClientRect().width));
+      const h = Math.max(1, Math.floor(container.clientHeight || container.getBoundingClientRect().height));
       renderer.setSize(w, h);
       const res = program.uniforms['iResolution'].value as Float32Array;
       res[0] = gl.drawingBufferWidth;
