@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <main className="bg-ink-900">
+    <main className="bg-[#EFEBE0]">
       <Hero />
       <About />
       <Services />
