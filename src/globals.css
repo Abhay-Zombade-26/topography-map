@@ -1,0 +1,16 @@
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap");
+
+:root {
+  --background: #EFEBE0;
+  --foreground: #111112;
+  --color-paper: #EFEBE0;
+  --color-ink-900: #111112;
+  --color-lime: #D2FF00;
+  --color-muted: #6B6B70;
+  --color-card: #F5F2E9;
+}
+
+body {
+  background: #EFEBE0;
+  color: #111112;
+}
