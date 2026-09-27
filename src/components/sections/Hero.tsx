@@ -76,61 +76,59 @@ export default function Hero() {
     mass: 0.6,
   });
 
-  const TWO_OCLOCK = 60;   // 2 o'clock position (60°)
-  const SIX_OCLOCK = 180;  // 6 o'clock position (180°, bottom center)
+  const ORBIT_RADIUS = 98; // radius of watch rim in px
 
-  // Rule 2 — Orbital Motion (2 o'clock to 6 o'clock):
-  // Hand rotates counter-clockwise with dot from 2 o'clock to 6 o'clock
-  const handRotation = useTransform(
+  // ── Step 1 & 2: Minute Hand Rotation ───────────────────
+  // 0.00 → 0.25: Starts at 12 o'clock (0°) and rotates clockwise to 2 o'clock (60°)
+  // 0.25 → 0.70: Connects with dot and rotates together from 2 o'clock (60°) down to 6 o'clock (180°)
+  // 0.70 → 1.00: Remains at 6 o'clock (180°)
+  const minuteHandRotation = useTransform(
     smooth,
-    [0, 0.6, 1.0],
-    [TWO_OCLOCK, SIX_OCLOCK, SIX_OCLOCK]
+    [0, 0.25, 0.7, 1.0],
+    [0, 60, 180, 180]
   );
 
-  // Outer dial ticks rotate counter-clockwise
-  const dialRotation = useTransform(
-    smooth,
-    [0, 0.6, 1.0],
-    [0, -60, -60]
-  );
-
-  // Lime dot moves along perimeter path from 2 o'clock down to 6 o'clock
+  // ── Step 1 & 2: Orbit Angle for Circular Math ─────────
+  // 0.00 → 0.25: Lime dot stays stationary at 2 o'clock (60°)
+  // 0.25 → 0.70: Orbits rim from 2 o'clock (60°) down to 6 o'clock (180°)
+  // 0.70 → 1.00: Stays at 6 o'clock (180°)
   const orbitAngle = useTransform(
     smooth,
-    [0, 0.6, 1.0],
-    [TWO_OCLOCK, SIX_OCLOCK, SIX_OCLOCK]
+    [0, 0.25, 0.7, 1.0],
+    [60, 60, 180, 180]
   );
 
-  // Rule 1 — Zero Expansion in Hero:
-  // Under NO circumstance should lime color expand over Hero layout.
-  // Scale stays strictly 1 (18px dot) throughout the hero sequence.
-  const orbitDotScale = useTransform(smooth, [0, 1.0], [1, 1]);
+  // ── Circular Math ($X = \cos(\text{angle}) \times \text{radius}$, $Y = \sin(\text{angle}) \times \text{radius}$) ──
+  // 2 o'clock (60°): angle = -30° → X = cos(-30°) * 98 = +84.87px, Y = sin(-30°) * 98 = -49px
+  // 6 o'clock (180°): angle = 90° → X = cos(90°) * 98 = 0px, Y = sin(90°) * 98 = +98px
+  const orbitDotX = useTransform(orbitAngle, (deg) => {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return Math.cos(rad) * ORBIT_RADIUS;
+  });
 
-  // Rule 3 — Downward Exit & Section 2 Fill:
-  // When dot reaches 6 o'clock (scroll 0.6), transition position downward
-  // toward the bottom boundary of the hero section container.
-  const orbitDotYOffset = useTransform(
+  const orbitDotY = useTransform(orbitAngle, (deg) => {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return Math.sin(rad) * ORBIT_RADIUS;
+  });
+
+  // ── Step 3: Straight Downward Exit ─────────────────────
+  // 0.70 → 0.95: Moves straight down off the watch face via vertical offset
+  const orbitDotYExit = useTransform(
     smooth,
-    [0, 0.6, 0.88, 1.0],
+    [0, 0.7, 0.95, 1.0],
     [0, 0, 240, 240]
   );
 
-  // Dot gently fades as it exits into Section 2 at bottom boundary
+  // Additional transforms
+  const dialRotation = useTransform(smooth, [0, 1.0], [0, 0]); // Stationary watch dial
+  const dialScale = useTransform(smooth, [0, 0.6], [1, 1]);
+  const orbitDotScale = useTransform(smooth, [0, 1.0], [1, 1]);
   const orbitDotOpacity = useTransform(smooth, [0, 0.85, 0.95], [1, 1, 0]);
-
-  // Subtle dial scale on scroll
-  const dialScale = useTransform(smooth, [0, 0.6], [1, 1.05]);
-
-  // "SCROLL TO EXPLORE" label fades out on scroll
   const labelOpacity = useTransform(smooth, [0, 0.08], [1, 0]);
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: "300vh" }}>
-      {/* 
-        Fixed Navbar (z-index: 9999, top: 0, width: 100%)
-        Hidden during preloader, fades in once zoomed out,
-        remains fixed across all sections.
-      */}
+      {/* Fixed Navbar */}
       <Nav isVisible={heroRevealed} />
 
       <div
@@ -159,7 +157,7 @@ export default function Hero() {
           FOR FOUNDERS WHO SHIP
         </motion.div>
 
-        {/* ALTIMA wordmark — tilted, baseline hits ~52% */}
+        {/* ALTIMA wordmark */}
         <div
           className="pointer-events-none absolute z-30 select-none"
           style={{
@@ -201,7 +199,7 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* SOFTWARE SOLUTIONS — right side, overlapping ALTIMA's bottom-right */}
+        {/* SOFTWARE SOLUTIONS */}
         <motion.div
           className="pointer-events-none absolute z-30 flex flex-col items-end text-right select-none"
           style={{
@@ -279,7 +277,7 @@ export default function Hero() {
           </a>
         </motion.div>
 
-        {/* 3D LIME CUBE — bottom-right corner */}
+        {/* 3D LIME CUBE */}
         <motion.div
           className="absolute z-30 pointer-events-auto"
           style={{ top: "78%", right: "6%" }}
@@ -366,11 +364,7 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* 
-          CAMERA ZOOM / POSITION WRAPPER FOR PRELOADER:
-          - Initial state: tightly zoomed in (scale: 3.6) at viewport center (top: 50%)
-          - Completion (100%): animates scale back down (scale: 1) settling into top: 70%
-        */}
+        {/* CAMERA ZOOM / POSITION WRAPPER FOR PRELOADER */}
         <motion.div
           className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-25"
           initial={{ top: "50%", scale: 3.6 }}
@@ -384,13 +378,14 @@ export default function Hero() {
           }}
         >
           <ScrollWatch
-            handRotation={handRotation}
+            minuteHandRotation={minuteHandRotation}
+            orbitDotX={orbitDotX}
+            orbitDotY={orbitDotY}
+            orbitDotYExit={orbitDotYExit}
             scale={dialScale}
             dialRotation={dialRotation}
-            orbitAngle={orbitAngle}
             orbitDotScale={orbitDotScale}
             orbitDotOpacity={orbitDotOpacity}
-            orbitDotYOffset={orbitDotYOffset}
             labelOpacity={labelOpacity}
             loadProgress={loadProgress}
             isLoaded={isLoaded}
