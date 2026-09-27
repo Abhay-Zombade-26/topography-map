@@ -1,10 +1,16 @@
+import React from "react";
 import {
   motion,
-  useTransform,
+  useMotionValue,
+  useAnimationFrame,
   type MotionValue,
 } from "framer-motion";
 
-interface ScrollWatchProps {
+export interface ScrollWatchProps {
+  minuteHandRotation?: MotionValue<number>;
+  orbitDotX?: MotionValue<number>;
+  orbitDotY?: MotionValue<number>;
+  orbitDotYExit?: MotionValue<number>;
   handRotation?: MotionValue<number>;
   scale?: MotionValue<number>;
   dialRotation?: MotionValue<number>;
@@ -18,13 +24,16 @@ interface ScrollWatchProps {
 }
 
 const TICKS = Array.from({ length: 12 }, (_, i) => i);
-const ORBIT_RADIUS = 98; // px from watch center, matches tick mark radius
+const ORBIT_RADIUS = 98;
 
 export default function ScrollWatch({
+  minuteHandRotation,
+  orbitDotX,
+  orbitDotY,
+  orbitDotYExit,
   handRotation,
   scale,
   dialRotation,
-  orbitAngle,
   orbitDotScale,
   orbitDotOpacity,
   orbitDotYOffset,
@@ -32,27 +41,16 @@ export default function ScrollWatch({
   loadProgress = 100,
   isLoaded = true,
 }: ScrollWatchProps) {
-  /* ---------- orbit dot x / y from angle ---------- */
-  const baseOrbitX = useTransform(
-    orbitAngle ?? ({ get: () => 60 } as MotionValue<number>),
-    (a: number) => Math.sin((a * Math.PI) / 180) * ORBIT_RADIUS
-  );
-  const baseOrbitY = useTransform(
-    orbitAngle ?? ({ get: () => 60 } as MotionValue<number>),
-    (a: number) => -Math.cos((a * Math.PI) / 180) * ORBIT_RADIUS
-  );
+  /* ---------- SECOND HAND — real-time continuous sweep ---------- */
+  const secondRotation = useMotionValue(0);
+  useAnimationFrame(() => {
+    const now = new Date();
+    const s = now.getSeconds() + now.getMilliseconds() / 1000;
+    secondRotation.set(s * 6);
+  });
 
-  const fallbackYOffset = { get: () => 0 } as MotionValue<number>;
-  const activeYOffset = orbitDotYOffset ?? fallbackYOffset;
-
-  const finalOrbitY = useTransform(
-    [baseOrbitY, activeYOffset],
-    (values: number[]) => {
-      const by = values[0] ?? 0;
-      const yOff = values[1] ?? 0;
-      return by + yOff;
-    }
-  );
+  const activeHandRotation = minuteHandRotation ?? handRotation ?? 0;
+  const activeDotYExit = orbitDotYExit ?? orbitDotYOffset;
 
   return (
     <motion.div
@@ -69,12 +67,13 @@ export default function ScrollWatch({
         overflow: "visible",
       }}
     >
-      {/* ── Rotating dial container (ticks rotate counter-clockwise) ── */}
+      {/* ── Ticks ── */}
       <motion.div
         style={{
           position: "absolute",
           inset: 0,
           rotate: dialRotation ?? 0,
+          transformOrigin: "center center",
         }}
       >
         {TICKS.map((i) => (
@@ -97,182 +96,285 @@ export default function ScrollWatch({
         ))}
       </motion.div>
 
-      {/* ── Central hand with tip dot ── */}
+      {/* ── HOUR HAND — bold, fixed at 10 o'clock ── */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: "4px",
+          height: "68px",
+          transformOrigin: "50% 56px",
+          transform: "translate(-50%, -56px) rotate(300deg)",
+          zIndex: 20,
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "12px",
+            backgroundColor: "#111112",
+            borderRadius: "2px",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "56px",
+            backgroundColor: "#111112",
+            borderRadius: "2px",
+          }}
+        />
+      </div>
+
+      {/* ── MINUTE / SCROLL HAND ── */}
       <motion.div
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
-          width: "1.5px",
-          height: "94px",
-          transformOrigin: "50% 100%",
-          rotate: handRotation ?? 60,
+          width: "2.5px",
+          height: "104px",
+          transformOrigin: "50% 90px",
           x: "-50%",
-          y: "-100%",
+          y: "-90px",
+          rotate: activeHandRotation,
+          zIndex: 21,
         }}
       >
-        {/* Tapered hand line */}
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            background:
-              "linear-gradient(to top, #111112 0%, #111112 60%, #333 100%)",
-          }}
-        />
-        {/* Small ink dot at tip of hand */}
         <div
           style={{
             position: "absolute",
-            top: -3,
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "14px",
+            backgroundColor: "#111112",
+            borderRadius: "2px",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "90px",
+            backgroundColor: "#111112",
+            borderRadius: "2px",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "-4px",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "6px",
-            height: "6px",
+            width: "8px",
+            height: "8px",
             borderRadius: "50%",
             backgroundColor: "#111112",
           }}
         />
       </motion.div>
 
-      {/* ── Orbit dot — the interactive lime dot on the perimeter ── */}
-      {/* Zero expansion in Hero: scale stays strictly 1 */}
+      {/* ── SECOND HAND — thin, subtle, always sweeping ── */}
+      {/* Shaft: 80px above pivot | Tail: 12px below pivot */}
       <motion.div
         style={{
           position: "absolute",
-          top: "calc(50% - 9px)",
-          left: "calc(50% - 9px)",
-          width: "18px",
-          height: "18px",
-          borderRadius: "50%",
-          backgroundColor: "#D2FF00",
-          border: "1.5px solid #111112",
-          x: baseOrbitX,
-          y: finalOrbitY,
-          scale: orbitDotScale ?? 1,
-          opacity: isLoaded ? (orbitDotOpacity ?? 1) : 0,
-          transformOrigin: "center bottom",
-          zIndex: 26,
-          boxShadow: "0 0 10px 2px rgba(210, 255, 0, 0.4)",
+          top: "50%",
+          left: "50%",
+          width: "1px",
+          height: "92px",
+          transformOrigin: "50% 80px",
+          x: "-50%",
+          y: "-80px",
+          rotate: secondRotation,
+          zIndex: 22,
         }}
-      />
+      >
+        {/* counterweight tail — SHORT, stays inside dial */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "12px",
+            backgroundColor: "rgba(17, 17, 17, 0.45)",
+          }}
+        />
+        {/* main shaft — 80px, thin */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "80px",
+            backgroundColor: "rgba(17, 17, 17, 0.45)",
+          }}
+        />
+        {/* tiny tip dot */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-2px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "3px",
+            height: "3px",
+            borderRadius: "50%",
+            backgroundColor: "rgba(17, 17, 17, 0.45)",
+          }}
+        />
+      </motion.div>
 
-      {/* ── Center pivot & Preloader Countdown / Dial Label ── */}
+      {/* ── LIME ORBIT DOT ── */}
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: 0,
+          y: activeDotYExit ?? 0,
+          pointerEvents: "none",
+        }}
+      >
+        <motion.div
+          style={{
+            position: "absolute",
+            top: "calc(50% - 9px)",
+            left: "calc(50% - 9px)",
+            width: "18px",
+            height: "18px",
+            borderRadius: "50%",
+            backgroundColor: "#D2FF00",
+            x: orbitDotX ?? 84.87,
+            y: orbitDotY ?? -49,
+            scale: orbitDotScale ?? 1,
+            opacity: isLoaded ? (orbitDotOpacity ?? 1) : 0,
+            transformOrigin: "center center",
+            zIndex: 26,
+            boxShadow: "0 0 16px 4px rgba(210, 255, 0, 0.45)",
+          }}
+        />
+      </motion.div>
+
+      {/* ── Center pivot cap ── */}
       <div
         style={{
           position: "absolute",
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 20,
+          width: "10px",
+          height: "10px",
+          borderRadius: "50%",
+          backgroundColor: "#111112",
+          zIndex: 28,
           pointerEvents: "none",
-          userSelect: "none",
         }}
-      >
-        {/* Center pivot */}
-        {isLoaded && (
-          <div
-            style={{
-              width: "5px",
-              height: "5px",
-              borderRadius: "50%",
-              backgroundColor: "#111112",
-              marginBottom: "3px",
-            }}
-          />
-        )}
+      />
 
-        {/* Numeric countdown (0% to 100%) during preloader, then sleek 01 — ALTIMA */}
-        {!isLoaded ? (
+      {/* ── Inner highlight dot on pivot ── */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "3px",
+          height: "3px",
+          borderRadius: "50%",
+          backgroundColor: "#F5F2E9",
+          zIndex: 29,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Preloader progress ── */}
+      {!isLoaded && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(50% + 28px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 27,
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: "baseline",
+              fontFamily: '"Anton", sans-serif',
+              color: "#111112",
+              fontSize: "32px",
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+              letterSpacing: "-0.02em",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                fontFamily: '"Anton", sans-serif',
-                color: "#111112",
-                fontSize: "32px",
-                lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              <span>{loadProgress}</span>
-              <span
-                style={{
-                  fontFamily: '"Inter", sans-serif',
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  marginLeft: "2px",
-                  color: "#6B6B70",
-                }}
-              >
-                %
-              </span>
-            </div>
+            <span>{loadProgress}</span>
             <span
               style={{
                 fontFamily: '"Inter", sans-serif',
-                fontSize: "6.5px",
-                fontWeight: 600,
-                letterSpacing: "0.28em",
-                textTransform: "uppercase",
+                fontSize: "13px",
+                fontWeight: 700,
+                marginLeft: "2px",
                 color: "#6B6B70",
-                marginTop: "3px",
-                whiteSpace: "nowrap",
               }}
             >
-              LOADING ALTIMA
+              %
             </span>
           </div>
-        ) : (
-          <motion.span
-            initial={{ opacity: 0, y: 3 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
+          <span
             style={{
-              fontFamily: '"Inter", system-ui, sans-serif',
-              fontSize: "9px",
+              fontFamily: '"Inter", sans-serif',
+              fontSize: "6.5px",
               fontWeight: 600,
-              letterSpacing: "0.16em",
+              letterSpacing: "0.28em",
               textTransform: "uppercase",
-              color: "#111112",
+              color: "#6B6B70",
+              marginTop: "3px",
               whiteSpace: "nowrap",
             }}
           >
-            01 — ALTIMA
-          </motion.span>
-        )}
-      </div>
+            LOADING ALTIMA
+          </span>
+        </div>
+      )}
 
-      {/* ── Text label under the dial ── */}
+      {/* ── Label below dial ── */}
       <motion.div
         style={{
           position: "absolute",
-          top: "calc(100% + 20px)",
+          top: "calc(100% + 22px)",
           left: "50%",
-          x: "-50%",
+          transform: "translateX(-50%)",
           fontFamily: '"Inter", system-ui, sans-serif',
-          fontSize: "10px",
-          letterSpacing: "0.25em",
+          fontSize: "11px",
+          fontWeight: 600,
+          letterSpacing: "0.22em",
           textTransform: "uppercase",
-          color: "rgba(17, 17, 17, 0.5)",
+          color: "#111112",
           whiteSpace: "nowrap",
           opacity: isLoaded ? (labelOpacity ?? 1) : 0,
         }}
       >
-        SCROLL TO EXPLORE
+        FREE DEMO IN 2 HRS
       </motion.div>
     </motion.div>
   );
