@@ -1,14 +1,8 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════════════
-   BUTTERMAX-STYLE LIQUID PAINT REVEAL
-   ═══════════════════════════════════════════════════════════════
-   Base Layer (bottom):  Yellow #D2FF00 bg + BLACK text  ← always visible
-   Inverted Layer (top): Pure black #000000 bg + WHITE text  ← revealed by brush
-   Mask Canvas:          Liquid blobs merged via gooey post-process,
-                         used as CSS mask-image on the inverted layer.
-                         Exponential decay → strokes dissolve like surface tension.
+   BUTTERMAX-STYLE LIQUID PAINT REVEAL + MAGNETIC TYPOGRAPHY
    ═══════════════════════════════════════════════════════════════ */
 
 interface BrushPoint {
@@ -17,10 +11,11 @@ interface BrushPoint {
   radius: number;
   alpha: number;
   seed: number;
-  vx: number; // velocity for stretch
-  vy: number;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   BRUSH MASK HOOK — smaller footprint, quadratic strokes, fast decay
+   ═══════════════════════════════════════════════════════════════ */
 function useBrushMask(
   containerRef: React.RefObject<HTMLElement | null>,
   invertedLayerRef: React.RefObject<HTMLDivElement | null>
@@ -72,42 +67,73 @@ function useBrushMask(
         return;
       }
 
-      /* ── STEP 1: Clear main canvas ── */
       ctx.clearRect(0, 0, w, h);
 
       const points = pointsRef.current;
       let hasVisible = false;
 
       if (points.length > 0) {
-        /* ── STEP 2: Draw each point as a solid white blob + sub-blobs ── */
         ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#ffffff";
 
+        /* ── PASS 1: Quadratic curved stroke path for smooth liquid ribbon ── */
+        if (points.length >= 3) {
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.globalAlpha = 0.85;
+
+          // Walk through points, drawing quadratic curves using midpoints
+          for (let i = 1; i < points.length - 1; i++) {
+            const p0 = points[i];
+            const p1 = points[i + 1];
+            if (!p0 || !p1) continue;
+            if (p0.alpha <= 0.02 || p1.alpha <= 0.02) continue;
+
+            const midX = (p0.x + p1.x) / 2;
+            const midY = (p0.y + p1.y) / 2;
+
+            // Average radius & alpha across segment
+            const avgRadius = (p0.radius + p1.radius) / 2;
+            const avgAlpha = (p0.alpha + p1.alpha) / 2;
+
+            ctx.globalAlpha = avgAlpha * 0.9;
+            ctx.lineWidth = avgRadius * 1.4;
+
+            ctx.beginPath();
+            const prev = points[i - 1];
+            if (!prev) continue;
+            const prevMidX = (prev.x + p0.x) / 2;
+            const prevMidY = (prev.y + p0.y) / 2;
+            ctx.moveTo(prevMidX, prevMidY);
+            ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+            ctx.stroke();
+          }
+        }
+
+        /* ── PASS 2: Individual blobs for organic core ── */
         for (let i = 0; i < points.length; i++) {
           const p = points[i];
           if (!p) continue;
-          if (p.alpha <= 0.01) continue;
+          if (p.alpha <= 0.02) continue;
           if (p.radius <= 1) continue;
 
           hasVisible = true;
           ctx.globalAlpha = p.alpha;
 
-          // ── Main circular blob ──
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
           ctx.fill();
 
-          // ── Organic sub-blobs (deterministic from seed) ──
-          // These give the blob an irregular liquid silhouette.
-          for (let k = 0; k < 6; k++) {
+          // 4 sub-blobs per point for irregular silhouette
+          for (let k = 0; k < 4; k++) {
             const r1 = Math.sin(p.seed + k * 1.7891) * 0.5 + 0.5;
             const r2 = Math.cos(p.seed * 1.31 + k * 2.9714) * 0.5 + 0.5;
-            const r3 = Math.sin(p.seed * 0.77 + k * 3.14159) * 0.5 + 0.5;
 
-            const angle = (k / 6) * Math.PI * 2 + r1 * 0.8;
-            const dist = p.radius * (0.3 + r2 * 0.42);
+            const angle = (k / 4) * Math.PI * 2 + r1 * 0.9;
+            const dist = p.radius * (0.35 + r2 * 0.35);
             const sx = p.x + Math.cos(angle) * dist;
             const sy = p.y + Math.sin(angle) * dist;
-            const sr = p.radius * (0.32 + r3 * 0.32);
+            const sr = p.radius * (0.35 + r1 * 0.25);
 
             ctx.beginPath();
             ctx.arc(sx, sy, sr, 0, Math.PI * 2);
@@ -117,44 +143,34 @@ function useBrushMask(
 
         ctx.globalAlpha = 1;
 
-        /* ── STEP 3: Gooey post-process (blur + alpha stack) ── */
-        // Blur the whole canvas into blurCanvas
+        /* ── PASS 3: Gooey post-process — blur + alpha stack ── */
         const blurCtx = blurCanvas.getContext("2d");
         if (blurCtx) {
           blurCtx.clearRect(0, 0, w, h);
-          // SVG-style gooey: blur brings nearby blobs together
-          blurCtx.filter = "blur(14px)";
+          blurCtx.filter = "blur(10px)";
           blurCtx.drawImage(canvas, 0, 0);
           blurCtx.filter = "none";
 
-          // Now stack the blurred version onto the main canvas N times.
-          // This multiplicatively boosts alpha in the core of each blob
-          // while keeping edges soft — approximating the feColorMatrix
-          // threshold used by the classic SVG gooey filter.
           ctx.clearRect(0, 0, w, h);
           ctx.globalCompositeOperation = "source-over";
-          for (let i = 0; i < 5; i++) {
+          for (let i = 0; i < 4; i++) {
             ctx.drawImage(blurCanvas, 0, 0);
           }
-          ctx.globalCompositeOperation = "source-over";
         }
 
-        /* ── STEP 4: Exponential ease-out decay ── */
-        // radius and alpha decay multiplicatively — like surface tension
-        // pulling liquid back into itself.
+        /* ── PASS 4: Fast exponential decay ── */
         for (let i = 0; i < points.length; i++) {
           const p = points[i];
           if (!p) continue;
-          p.radius *= 0.94;
-          p.alpha *= 0.92;
+          p.radius *= 0.93;
+          p.alpha *= 0.9;
         }
 
         pointsRef.current = points.filter(
-          (p) => p && p.alpha > 0.02 && p.radius > 1.5
+          (p) => p && p.alpha > 0.03 && p.radius > 1
         );
       }
 
-      /* ── STEP 5: Update mask or clear ── */
       if (hasVisible) {
         const url = canvas.toDataURL("image/png");
         invertedLayer.style.webkitMaskImage = `url(${url})`;
@@ -184,43 +200,29 @@ function useBrushMask(
 
       const last = lastMouseRef.current;
 
-      // Base brush radius — large pooled droplet
+      // Smaller brush — 60–80px depending on viewport
       const baseRadius = Math.max(
-        120,
-        Math.min(180, window.innerHeight * 0.16)
+        55,
+        Math.min(80, window.innerHeight * 0.08)
       );
 
       if (last) {
         const dx = x - last.x;
         const dy = y - last.y;
         const dist = Math.hypot(dx, dy);
-        const dt = Math.max(now - last.time, 8);
-        const speed = dist / dt; // px/ms
 
-        // ── Velocity-based scaling ──
-        // Fast movement → smaller, stretched strokes (thinner ink trail)
-        // Slow movement → bigger, rounded pool (surface tension pools)
-        const speedFactor = Math.min(speed * 0.05, 1); // 0..1
-        const radius = baseRadius * (1 - speedFactor * 0.35); // 65%–100%
-
-        // Tight spacing so fast strokes stay connected (stretched)
-        const step = Math.max(6, radius * (0.14 + speedFactor * 0.1));
+        // Spacing between stamps — tight for smooth ribbon
+        const step = Math.max(4, baseRadius * 0.18);
         const steps = Math.max(1, Math.ceil(dist / step));
-
-        // Normalized velocity for potential stretch
-        const nx = dx / (dist || 1);
-        const ny = dy / (dist || 1);
 
         for (let i = 1; i <= steps; i++) {
           const t = i / steps;
           pointsRef.current.push({
             x: last.x + dx * t,
             y: last.y + dy * t,
-            radius,
+            radius: baseRadius,
             alpha: 1,
             seed: Math.random() * 1000,
-            vx: nx * speed,
-            vy: ny * speed,
           });
         }
       } else {
@@ -230,16 +232,13 @@ function useBrushMask(
           radius: baseRadius,
           alpha: 1,
           seed: Math.random() * 1000,
-          vx: 0,
-          vy: 0,
         });
       }
 
       lastMouseRef.current = { x, y, time: now };
 
-      // Safety cap
-      if (pointsRef.current.length > 500) {
-        pointsRef.current = pointsRef.current.slice(-500);
+      if (pointsRef.current.length > 600) {
+        pointsRef.current = pointsRef.current.slice(-600);
       }
 
       startLoop();
@@ -263,9 +262,100 @@ function useBrushMask(
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SHARED CONTENT
+   MAGNETIC HEADLINE — 3D tilt follows cursor
    ═══════════════════════════════════════════════════════════════ */
-function AboutContent({ inverted }: { inverted: boolean }) {
+function MagneticHeadline() {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const el = wrapperRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = (e.clientX - cx) / (rect.width / 2); // -1..1
+      const dy = (e.clientY - cy) / (rect.height / 2);
+
+      // Cap influence — nearer = stronger
+      const dist = Math.hypot(dx, dy);
+      const influence = Math.max(0, 1 - dist * 0.6);
+
+      // rotateY responds to horizontal, rotateX to vertical (inverted)
+      const rotY = dx * influence * 6;   // max ~6deg
+      const rotX = -dy * influence * 6;
+
+      setTilt({ x: rotX, y: rotY });
+    };
+
+    const onLeave = () => setTilt({ x: 0, y: 0 });
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={wrapperRef}
+      style={{ perspective: "1200px", perspectiveOrigin: "center center" }}
+    >
+      <motion.div
+        animate={{
+          rotateX: tilt.x,
+          rotateY: tilt.y,
+          scale: 1 + Math.min(Math.abs(tilt.x) + Math.abs(tilt.y), 6) * 0.003,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 180,
+          damping: 22,
+          mass: 0.6,
+        }}
+        style={{
+          transformStyle: "preserve-3d",
+          willChange: "transform",
+        }}
+      >
+        <HeadlineContent />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHARED CONTENT — used in both layers
+   ═══════════════════════════════════════════════════════════════ */
+function HeadlineContent() {
+  return (
+    <h2
+      style={{
+        fontFamily: '"Anton", sans-serif',
+        lineHeight: 0.94,
+        letterSpacing: "-0.015em",
+      }}
+      className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-normal uppercase max-w-2xl lg:max-w-3xl"
+    >
+      SOFTWARE STUDIO FOR <br className="hidden sm:inline" />
+      FOUNDERS WHO SHIP
+    </h2>
+  );
+}
+
+function AboutContent({
+  inverted,
+  magnetic,
+}: {
+  inverted: boolean;
+  magnetic?: boolean;
+}) {
   const textColor = inverted ? "#FFFFFF" : "#111112";
   const textColorFaded = inverted ? "rgba(255,255,255,0.85)" : "rgba(17,17,18,0.85)";
   const overlineColor = inverted ? "rgba(255,255,255,0.7)" : "rgba(17,17,18,0.8)";
@@ -283,18 +373,13 @@ function AboutContent({ inverted }: { inverted: boolean }) {
           ABOUT ALTIMA
         </div>
 
-        <h2
-          style={{
-            fontFamily: '"Anton", sans-serif',
-            lineHeight: 0.94,
-            letterSpacing: "-0.015em",
-            color: textColor,
-          }}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-normal uppercase max-w-2xl lg:max-w-3xl"
-        >
-          SOFTWARE STUDIO FOR <br className="hidden sm:inline" />
-          FOUNDERS WHO SHIP
-        </h2>
+        {magnetic ? (
+          <MagneticHeadline />
+        ) : (
+          <div style={{ color: textColor }}>
+            <HeadlineContent />
+          </div>
+        )}
 
         <p
           style={{
@@ -341,7 +426,7 @@ export default function About() {
       className="relative min-h-screen w-full select-none overflow-hidden"
       style={{ backgroundColor: "#D2FF00", color: "#111112" }}
     >
-      {/* ── Inline SVG gooey filter (available for reference / optional CSS use) ── */}
+      {/* ── Inline SVG gooey filter (reference) ── */}
       <svg
         aria-hidden="true"
         style={{ position: "absolute", width: 0, height: 0, pointerEvents: "none" }}
@@ -380,12 +465,12 @@ export default function About() {
         className="relative min-h-screen w-full"
         style={{ zIndex: 5, cursor: "crosshair" }}
       >
-        {/* ── BASE LAYER: Yellow + Black text ── */}
+        {/* ── BASE LAYER: Yellow + Black text (with magnetic headline) ── */}
         <div className="absolute inset-0" style={{ zIndex: 1 }}>
-          <AboutContent inverted={false} />
+          <AboutContent inverted={false} magnetic={true} />
         </div>
 
-        {/* ── INVERTED LAYER: Pure black + White text — masked by canvas ── */}
+        {/* ── INVERTED LAYER: Pure black + White text — masked ── */}
         <div
           ref={invertedLayerRef}
           className="absolute inset-0"
@@ -403,7 +488,7 @@ export default function About() {
             willChange: "mask-image, -webkit-mask-image, opacity",
           }}
         >
-          <AboutContent inverted={true} />
+          <AboutContent inverted={true} magnetic={false} />
         </div>
       </div>
 
