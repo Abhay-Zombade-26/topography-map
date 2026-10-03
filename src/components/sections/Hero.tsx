@@ -98,7 +98,7 @@ export default function Hero() {
     [60, 60, 180, 180]
   );
 
-  // ── Circular Math ($X = \cos(\text{angle}) \times \text{radius}$, $Y = \sin(\text{angle}) \times \text{radius}$) ──
+  // ── Circular Math ──────────────────────────────────────
   // 2 o'clock (60°): angle = -30° → X = cos(-30°) * 98 = +84.87px, Y = sin(-30°) * 98 = -49px
   // 6 o'clock (180°): angle = 90° → X = cos(90°) * 98 = 0px, Y = sin(90°) * 98 = +98px
   const orbitDotX = useTransform(orbitAngle, (deg) => {

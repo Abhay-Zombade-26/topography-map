@@ -54,6 +54,7 @@ export default function ScrollWatch({
 
   return (
     <motion.div
+      aria-hidden="true"
       style={{
         position: "relative",
         width: "220px",
@@ -334,7 +335,7 @@ export default function ScrollWatch({
                 fontSize: "13px",
                 fontWeight: 700,
                 marginLeft: "2px",
-                color: "#6B6B70",
+                color: "#4A4A4D",
               }}
             >
               %
@@ -347,7 +348,7 @@ export default function ScrollWatch({
               fontWeight: 600,
               letterSpacing: "0.28em",
               textTransform: "uppercase",
-              color: "#6B6B70",
+              color: "#4A4A4D",
               marginTop: "3px",
               whiteSpace: "nowrap",
             }}
@@ -361,19 +362,35 @@ export default function ScrollWatch({
       <motion.div
         style={{
           position: "absolute",
-          top: "calc(100% + 22px)",
+          top: "calc(100% + 26px)",
           left: "50%",
-          transform: "translateX(-50%)",
-          fontFamily: '"Inter", system-ui, sans-serif',
-          fontSize: "11px",
-          fontWeight: 600,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
+          x: "-50%",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 16px",
+          borderRadius: "999px",
+          backgroundColor: "#D2FF00",
           color: "#111112",
+          fontFamily: '"Inter", system-ui, sans-serif',
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
           whiteSpace: "nowrap",
           opacity: isLoaded ? (labelOpacity ?? 1) : 0,
+          boxShadow: "0 4px 16px rgba(210, 255, 0, 0.35)",
         }}
       >
+        <span
+          style={{
+            display: "inline-block",
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            backgroundColor: "#111112",
+          }}
+        />
         FREE DEMO IN 2 HRS
       </motion.div>
     </motion.div>
