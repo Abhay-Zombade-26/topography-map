@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 const LINKS = [
   { label: "HOME", to: "/" },
   { label: "ABOUT", to: "/about" },
-  { label: "SERVICES", to: "/#services" },
+  { label: "SERVICES", to: "/services" },
   { label: "WORK", to: "/work" },
   { label: "CONTACT", to: "/contact" },
 ] as const;
@@ -51,7 +51,7 @@ export default function Nav({ isVisible = true }: NavProps) {
               fontSize: "0.7rem",
               letterSpacing: "0.25em",
             }}
-            className="uppercase text-[#6B6B70] leading-none select-none"
+            className="uppercase text-[#4A4A4D] leading-none select-none"
           >
             / SOFTWARE SOLUTIONS
           </span>
@@ -66,23 +66,43 @@ export default function Nav({ isVisible = true }: NavProps) {
               letterSpacing: "0.15em",
               fontWeight: 500,
             }}
-            className="flex items-center gap-8 uppercase text-[#111112]"
+            className="hidden md:flex items-center gap-8 uppercase text-[#111112]"
           >
             {LINKS.map((link) => {
-              const isHome = link.label === "HOME";
-              const isActive =
-                currentPath === link.to || (isHome && currentPath === "/");
+              const isActive = currentPath === link.to;
 
               return (
                 <li key={link.label} className="relative flex flex-col items-center">
                   <Link
                     to={link.to as any}
-                    className="group relative inline-block text-[#111112] transition-colors duration-200 hover:text-[#D2FF00]"
+                    className="group relative inline-block text-[#111112]"
                   >
-                    {link.label}
+                    <span
+                      className="group/link relative block overflow-hidden"
+                      style={{ height: "1em", lineHeight: "1em" }}
+                    >
+                      <span
+                        className="block transition-transform duration-300 group-hover/link:-translate-y-full"
+                        style={{
+                          transform: "translateY(0)",
+                          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                        }}
+                      >
+                        {link.label}
+                      </span>
+                      <span
+                        className="absolute top-0 left-0 block transition-transform duration-300 group-hover/link:-translate-y-full"
+                        style={{
+                          transform: "translateY(100%)",
+                          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                        }}
+                      >
+                        {link.label}
+                      </span>
+                    </span>
 
-                    {/* Fixed 24px lime underline for HOME */}
-                    {isHome && (
+                    {/* Fixed 24px lime underline for active route */}
+                    {isActive && (
                       <span
                         className="absolute left-0 h-[2px] w-[24px] bg-[#D2FF00] pointer-events-none"
                         style={{ bottom: "-4px" }}
