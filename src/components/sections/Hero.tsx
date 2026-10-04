@@ -123,7 +123,7 @@ export default function Hero() {
   const dialRotation = useTransform(smooth, [0, 1.0], [0, 0]); // Stationary watch dial
   const dialScale = useTransform(smooth, [0, 0.6], [1, 1]);
   const orbitDotScale = useTransform(smooth, [0, 1.0], [1, 1]);
-  const orbitDotOpacity = useTransform(smooth, [0, 0.85, 0.95], [1, 1, 0]);
+  const orbitDotOpacity = useTransform(smooth, [0, 0.7, 0.72], [1, 1, 0]);
   const labelOpacity = useTransform(smooth, [0, 0.08], [1, 0]);
 
   return (
