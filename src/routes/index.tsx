@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Hero from "@/components/sections/Hero";
+import HeroToAboutTransition from "@/components/sections/HeroToAboutTransition";
 import About from "@/components/sections/About";
 import Services from "@/components/sections/Services";
 import Work from "@/components/sections/Work";
@@ -32,6 +33,7 @@ function Home() {
   return (
     <main className="bg-[#EFEBE0]">
       <Hero />
+      <HeroToAboutTransition />
       <About />
       <Services />
       <Work />

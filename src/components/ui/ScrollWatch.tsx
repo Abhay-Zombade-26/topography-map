@@ -262,7 +262,6 @@ export default function ScrollWatch({
             opacity: isLoaded ? (orbitDotOpacity ?? 1) : 0,
             transformOrigin: "center center",
             zIndex: 26,
-            boxShadow: "0 0 16px 4px rgba(210, 255, 0, 0.45)",
           }}
         />
       </motion.div>

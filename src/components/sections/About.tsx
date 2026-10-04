@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════════════
    BUTTERMAX-STYLE LIQUID PAINT REVEAL + MAGNETIC TYPOGRAPHY
@@ -400,28 +400,13 @@ function AboutContent({
    MAIN ABOUT COMPONENT
    ═══════════════════════════════════════════════════════════════ */
 export default function About() {
-  const sectionRef = useRef<HTMLElement>(null);
   const brushContainerRef = useRef<HTMLDivElement>(null);
   const invertedLayerRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "start 30%"],
-  });
-
-  const smooth = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    mass: 0.6,
-  });
-
-  const scaleY = useTransform(smooth, [0, 1], [0, 1]);
 
   useBrushMask(brushContainerRef, invertedLayerRef);
 
   return (
     <section
-      ref={sectionRef}
       id="about"
       className="relative min-h-screen w-full select-none overflow-hidden"
       style={{ backgroundColor: "#D2FF00", color: "#111112" }}
@@ -444,18 +429,6 @@ export default function About() {
           </filter>
         </defs>
       </svg>
-
-      {/* ── Scroll transition background wipe ── */}
-      <motion.div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "#D2FF00",
-          transformOrigin: "center top",
-          scaleY,
-          zIndex: 0,
-        }}
-      />
 
       {/* ═════════════════════════════════════════════════════
           DUAL-LAYER BRUSH REVEAL SYSTEM
