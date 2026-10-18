@@ -340,7 +340,7 @@ export default function Services() {
         position: "relative",
         background: "#D2FF00",
         width: "100%",
-        height: isMobile ? "auto" : "200vh",
+        height: isMobile ? "auto" : "150vh",
       }}
     >
       <div
@@ -357,7 +357,8 @@ export default function Services() {
           display: "flex",
           flexDirection: "column",
           boxSizing: "border-box",
-          overflow: "hidden",
+          overflow: "visible",
+          zIndex: 20,
         }}
       >
         {/* ── MARQUEE ── */}
@@ -421,6 +422,7 @@ export default function Services() {
               marginTop: "6px",
               position: "relative",
               zIndex: 1,
+              overflow: "hidden",
             }}
           >
             {/* Column 1 — [01] Mobile Dev, [04] UI/UX Design */}
@@ -577,6 +579,33 @@ export default function Services() {
             <span>ALTIMA / 2025</span>
             <span>+</span>
           </div>
+        </div>
+
+        {/* ── STICKY SECTION CURVE TRANSITION (LIME ARC ROLLING UP OVER PROCESS) ── */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            bottom: "-1px",
+            left: 0,
+            right: 0,
+            height: "120px",
+            transform: "translateY(100%)",
+            pointerEvents: "none",
+            zIndex: 40,
+            overflow: "hidden",
+          }}
+        >
+          <svg
+            viewBox="0 0 1440 120"
+            preserveAspectRatio="none"
+            style={{ width: "100%", height: "100%", display: "block" }}
+          >
+            <path
+              d="M0,0 L1440,0 L1440,20 Q720,120 0,20 Z"
+              fill="#D2FF00"
+            />
+          </svg>
         </div>
       </div>
     </section>
