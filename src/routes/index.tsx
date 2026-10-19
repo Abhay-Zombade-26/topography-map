@@ -4,7 +4,6 @@ import HeroToAboutTransition from "@/components/sections/HeroToAboutTransition";
 import About from "@/components/sections/About";
 import Services from "@/components/sections/Services";
 import Process from "@/components/sections/Process";
-import Showcase from "@/components/sections/Showcase";
 import Work from "@/components/sections/Work";
 import Testimonials from "@/components/sections/Testimonials";
 import Contact from "@/components/sections/Contact";
@@ -39,7 +38,6 @@ function Home() {
       <About />
       <Services />
       <Process />
-       <Showcase />
       <Work />
       <Testimonials />
       <Contact />
