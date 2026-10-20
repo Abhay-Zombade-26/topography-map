@@ -336,6 +336,7 @@ export default function Services() {
     <section
       id="services"
       ref={sectionRef}
+      data-nav-theme="lime"
       style={{
         position: "relative",
         background: "#D2FF00",
