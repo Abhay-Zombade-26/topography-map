@@ -287,6 +287,7 @@ export default function HeroToAboutTransition() {
     <>
       <div
         ref={wrapperRef}
+        data-nav-theme="dark"
         style={{
           position: "relative",
           width: "100%",
