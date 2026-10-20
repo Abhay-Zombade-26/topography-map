@@ -127,7 +127,7 @@ export default function Hero() {
   const labelOpacity = useTransform(smooth, [0, 0.08], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative" style={{ height: "300vh" }}>
+    <section ref={sectionRef} className="relative" style={{ height: "300vh" }} data-nav-theme="cream">
       {/* Fixed Navbar */}
       <Nav isVisible={heroRevealed} />
 
