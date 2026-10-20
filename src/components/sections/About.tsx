@@ -264,7 +264,7 @@ function useBrushMask(
 /* ═══════════════════════════════════════════════════════════════
    MAGNETIC HEADLINE — 3D tilt follows cursor
    ═══════════════════════════════════════════════════════════════ */
-function MagneticHeadline() {
+function MagneticHeadline({ inverted = false }: { inverted?: boolean }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
@@ -324,7 +324,7 @@ function MagneticHeadline() {
           willChange: "transform",
         }}
       >
-        <HeadlineContent />
+        <HeadlineContent inverted={inverted} />
       </motion.div>
     </div>
   );
@@ -333,13 +333,14 @@ function MagneticHeadline() {
 /* ═══════════════════════════════════════════════════════════════
    SHARED CONTENT — used in both layers
    ═══════════════════════════════════════════════════════════════ */
-function HeadlineContent() {
+function HeadlineContent({ inverted = false }: { inverted?: boolean }) {
   return (
     <h2
       style={{
         fontFamily: '"Anton", sans-serif',
         lineHeight: 0.94,
         letterSpacing: "-0.015em",
+        color: inverted ? "#FFFFFF" : "#0B0B0C",
       }}
       className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-normal uppercase max-w-2xl lg:max-w-3xl"
     >
@@ -356,35 +357,72 @@ function AboutContent({
   inverted: boolean;
   magnetic?: boolean;
 }) {
-  const textColor = inverted ? "#FFFFFF" : "#111112";
-  const textColorFaded = inverted ? "rgba(255,255,255,0.85)" : "rgba(17,17,18,0.85)";
-  const overlineColor = inverted ? "rgba(255,255,255,0.7)" : "rgba(17,17,18,0.8)";
+  const textColor = inverted ? "#FFFFFF" : "#0B0B0C";
+  const bodyColor = inverted ? "rgba(255,255,255,0.85)" : "#052E16";
+  const badgeTextColor = inverted ? "#FFFFFF" : "#0B0B0C";
+  const badgeBg = inverted
+    ? "rgba(255, 255, 255, 0.08)"
+    : "rgba(11, 11, 12, 0.06)";
+  const badgeBorder = inverted
+    ? "rgba(255, 255, 255, 0.15)"
+    : "rgba(11, 11, 12, 0.12)";
 
   return (
     <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-14 lg:px-20 py-24 md:py-28 flex flex-col justify-center min-h-screen">
       <div className="max-w-3xl ml-0 md:ml-12 lg:ml-20">
+        {/* Glassmorphic Badge / Overline */}
         <div
           style={{
             fontFamily: '"Inter", system-ui, sans-serif',
-            color: overlineColor,
+            color: badgeTextColor,
+            background: badgeBg,
+            border: `1px solid ${badgeBorder}`,
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "1.25rem",
+            width: "fit-content",
           }}
-          className="text-xs md:text-sm font-semibold uppercase tracking-[0.25em] mb-4"
         >
-          ABOUT ALTIMA
+          <span
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: inverted ? "#D2FF00" : "#0B0B0C",
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: badgeTextColor,
+            }}
+          >
+            ABOUT ALTIMA
+          </span>
         </div>
 
         {magnetic ? (
-          <MagneticHeadline />
+          <MagneticHeadline inverted={inverted} />
         ) : (
           <div style={{ color: textColor }}>
-            <HeadlineContent />
+            <HeadlineContent inverted={inverted} />
           </div>
         )}
 
         <p
           style={{
             fontFamily: '"Inter", system-ui, sans-serif',
-            color: textColorFaded,
+            color: bodyColor,
+            fontWeight: 500,
           }}
           className="mt-6 md:mt-8 text-base sm:text-lg md:text-xl font-normal max-w-xl leading-relaxed"
         >
@@ -408,8 +446,9 @@ export default function About() {
   return (
     <section
       id="about"
+      data-nav-theme="lime"
       className="relative min-h-screen w-full select-none overflow-hidden"
-      style={{ backgroundColor: "#D2FF00", color: "#111112" }}
+      style={{ backgroundColor: "#D2FF00", color: "#0B0B0C" }}
     >
       {/* ── Inline SVG gooey filter (reference) ── */}
       <svg
