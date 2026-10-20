@@ -1,3 +1,3 @@
 export default function Work() {
-  return <section className="h-screen bg-ink-900" />;
+  return <section className="h-screen bg-ink-900" data-nav-theme="dark" />;
 }
