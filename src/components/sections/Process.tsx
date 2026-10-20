@@ -911,7 +911,7 @@ export default function Process({ variant = "home" }: { variant?: "home" | "comp
   /* ───────────── compact variant (also reduced-motion): plain list, no sticky ───────────── */
   if (variant === "compact" || reduced) {
     return (
-      <section style={{ background: BG, color: LIME, padding: "6rem 1.5rem" }}>
+      <section data-nav-theme="dark" style={{ background: BG, color: LIME, padding: "6rem 1.5rem" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gap: "2.5rem" }}>
           {STAGES.map((s, i) => (
             <div key={s.id} style={{ display: "grid", gridTemplateColumns: "4rem 1fr", gap: "1.5rem", alignItems: "baseline" }}>
@@ -929,7 +929,7 @@ export default function Process({ variant = "home" }: { variant?: "home" | "comp
 
   /* ─────────────────────────── home variant ─────────────────────────── */
   return (
-    <div style={{ position: "relative", backgroundColor: BG, visibility: "visible", isolation: "isolate" }}>
+    <div data-nav-theme="dark" style={{ position: "relative", backgroundColor: BG, visibility: "visible", isolation: "isolate" }}>
       <style>{`
         .p-badge .bi{transition:transform .5s cubic-bezier(.16,1,.3,1);cursor:pointer}
         .p-badge:hover .bi{transform:scale(1.1) rotate(10deg)}
