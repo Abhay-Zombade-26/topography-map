@@ -527,7 +527,7 @@ export default function About() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
           <img
-            src="/about-us-img/altima_chip.png"
+            src="/about-us-img/altima_chip.webp"
             alt="Altima Chip"
             className="w-full h-auto object-contain"
             style={{
@@ -557,7 +557,7 @@ export default function About() {
           transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
         >
           <img
-            src="/about-us-img/glass_monitor.png"
+            src="/about-us-img/glass_monitor.webp"
             alt="Glass Monitor"
             className="w-full h-auto object-contain"
             style={{
@@ -588,7 +588,7 @@ export default function About() {
           className="relative"
         >
           <img
-            src="/about-us-img/glass_terminal.png"
+            src="/about-us-img/glass_terminal.webp"
             alt="Glass Terminal"
             className="w-full h-auto object-contain"
             style={{
