@@ -18,37 +18,37 @@ const SERVICES = [
     id: "01",
     title: "Mobile Development",
     tagline: "NATIVE / SMOOTH / OFFLINE-READY",
-    image: "/services-img/mobile-dev.png",
+    image: "/services-img/mobile-dev.webp",
   },
   {
     id: "02",
     title: "Website Development",
     tagline: "FAST / RESPONSIVE / BUILT TO LAST",
-    image: "/services-img/website-dev.png",
+    image: "/services-img/website-dev.webp",
   },
   {
     id: "03",
     title: "AI Solutions",
     tagline: "SMART / AUTOMATED / ACCURATE",
-    image: "/services-img/AI.png",
+    image: "/services-img/AI.webp",
   },
   {
     id: "04",
     title: "UI/UX Design",
     tagline: "CLEAR / INTUITIVE / HUMAN",
-    image: "/services-img/UIUX.png",
+    image: "/services-img/UIUX.webp",
   },
   {
     id: "05",
     title: "Custom Software",
     tagline: "BESPOKE / SCALABLE / ENGINEERED",
-    image: "/services-img/custom-soft.png",
+    image: "/services-img/custom-soft.webp",
   },
   {
     id: "06",
     title: "Website Maintenance",
     tagline: "RELIABLE / MONITORED / UPDATED",
-    image: "/services-img/web-maintenance.png",
+    image: "/services-img/web-maintenance.webp",
   },
 ] as const;
 
